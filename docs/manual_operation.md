@@ -10,7 +10,7 @@
 
 | 品目 | 数量 | 備考 |
 |------|------|------|
-| Raspberry Pi Zero 2 W H | 6台 | 各出入口に1台 |
+| Raspberry Pi Zero 2 WH | 6台 | 各出入口に1台 |
 | microSDカード（16GB以上） | 6枚 | OSインストール済みのもの |
 | USB電源アダプター + ケーブル | 6式 | 各出入口のコンセントに接続 |
 | MM-BLEBC8N（BLEビーコン） | 担当者人数分（約30個） | 事前にUUID設定済みであること |
@@ -44,8 +44,7 @@ yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy,鈴木花子
 ...
 ```
 
-2. ファイル名を `person_map.csv` として保存する
-3. 全6台のRaspberry Piに配置する（ステップ3のセットアップ時にコピーする）
+2. ファイル名を `person_map.csv` として保存する（レポート生成時に参照するため、PCに保管しておく。各Raspberry Pi への配置は不要）
 
 ---
 
@@ -117,5 +116,5 @@ yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy,鈴木花子
 | 症状 | 確認事項 |
 |------|----------|
 | events.csv に記録されない | ビーコンのUUID設定・電源・Piの起動状態を確認 |
-| 特定の担当者が記録されない | person_map.csv のUUIDが正しいか確認 |
+| 特定の担当者が記録されない | ビーコンの電源・UUID設定を確認（スキャナーはUUIDをそのまま記録するため、person_map.csv は関係しない） |
 | Raspberry Pi が起動しない | 電源・SDカードを確認 |
