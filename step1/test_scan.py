@@ -27,11 +27,20 @@ from bleak.backends.scanner import AdvertisementData
 SCANNER_ID = "PI5-DEV"   # このスキャナーのID（本番では "2F-A" 等）
 CSV_FILE = "events.csv"  # 出力先CSVファイル名
 
-# ピーク検出パラメータ（Step1実測後に調整する）
-MIN_RSSI = -80        # dBm: これより弱い信号は無視する
-MIN_PEAK_RSSI = -70   # dBm: この値以上のピークのみイベントとして記録する
-DROP_THRESHOLD = 10   # dBm: ピーク値からこれだけ下がったら通過と判定する
-BEACON_TIMEOUT = 8.0  # sec: この時間検知されなければビーコンが去ったと判定する
+# 検知対象UUIDのプレフィックス（これ以外のBLEデバイスは無視する）
+# 本番では person_map.csv のUUID一覧に置き換える
+UUID_PREFIX = "ffb00000"
+
+# 検知パラメータ（Step1実測後に調整する）
+MIN_RSSI = -85        # dBm: これより弱い信号は無視する（ポケット減衰を考慮して緩める）
+MIN_PEAK_RSSI = -80   # dBm: この値以上のピークのみイベントとして記録する
+BEACON_TIMEOUT = 10.0  # sec: この時間検知されなければビーコンが去ったと判定する
+#   ※500msアドバタイズで10秒 = 20パケット連続ロスト → ほぼ確実に圏外
+#   DROP_THRESHOLD は廃止（静置ビーコンのRSSIゆらぎによる誤発火を防ぐため）
+
+# 自動停止条件
+MAX_EVENTS = 3        # イベントがこの回数に達したら停止
+MAX_DURATION = 300    # sec: この時間（秒）経過したら停止
 
 
 # ===== iBeacon パース =====
@@ -97,39 +106,19 @@ class BeaconTracker:
         # uuid -> {"peak": int, "last_seen": datetime, "fired": bool}
         self._states: dict = {}
 
-    def update(self, uuid: str, rssi: int, now: datetime) -> Optional[int]:
-        """
-        RSSI を更新する。
-        通過イベントが発火した場合はピーク RSSI を返す。それ以外は None。
-        """
+    def update(self, uuid: str, rssi: int, now: datetime) -> None:
+        """RSSI を更新する。イベント発火はタイムアウト時のみ（flush_timeouts）。"""
         if uuid not in self._states:
             self._states[uuid] = {
                 "peak": rssi,
                 "last_seen": now,
-                "fired": False,
             }
-            return None
+            return
 
         s = self._states[uuid]
         s["last_seen"] = now
-
-        # ピーク更新
         if rssi > s["peak"]:
             s["peak"] = rssi
-            s["fired"] = False  # 新たなピークが来たのでリセット
-
-        # ピーク後に DROP_THRESHOLD dBm 下降 → イベント発火
-        if (
-            not s["fired"]
-            and s["peak"] >= MIN_PEAK_RSSI
-            and rssi <= s["peak"] - DROP_THRESHOLD
-        ):
-            peak = s["peak"]
-            s["fired"] = True
-            s["peak"] = rssi  # 次回通過に備えてリセット
-            return peak
-
-        return None
 
     def flush_timeouts(self, now: datetime) -> list:
         """
@@ -144,8 +133,7 @@ class BeaconTracker:
         for uuid, s in self._states.items():
             elapsed = (now - s["last_seen"]).total_seconds()
             if elapsed >= BEACON_TIMEOUT:
-                if not s["fired"] and s["peak"] >= MIN_PEAK_RSSI:
-                    events.append((uuid, s["peak"]))
+                events.append((uuid, s["peak"]))
                 to_delete.append(uuid)
 
         for uuid in to_delete:
@@ -163,14 +151,19 @@ async def main() -> None:
     print(f"  出力ファイル  : {CSV_FILE}")
     print(f"  MIN_RSSI      : {MIN_RSSI} dBm")
     print(f"  MIN_PEAK_RSSI : {MIN_PEAK_RSSI} dBm")
-    print(f"  DROP_THRESHOLD: {DROP_THRESHOLD} dBm")
     print(f"  BEACON_TIMEOUT: {BEACON_TIMEOUT} s")
     print("Ctrl+C で終了")
     print("=" * 50)
 
     tracker = BeaconTracker()
+    event_count = 0
+    start_time = datetime.now()
+    stop_event = asyncio.Event()
 
     def on_detection(device: BLEDevice, adv: AdvertisementData) -> None:
+        nonlocal event_count
+        if stop_event.is_set():
+            return
         if not adv.manufacturer_data:
             return
 
@@ -185,27 +178,44 @@ async def main() -> None:
         uuid = beacon["uuid"]
         now = datetime.now()
 
-        print(f"  検知 {uuid[:8]}...  RSSI={rssi:4d}dBm")
+        # 対象外のUUIDは無視する
+        if not uuid.lower().startswith(UUID_PREFIX):
+            return
 
-        peak = tracker.update(uuid, rssi, now)
-        if peak is not None:
-            ts = now.strftime("%Y-%m-%d %H:%M:%S")
-            record_event(ts, SCANNER_ID, uuid, peak)
+        print(f"  検知 {uuid[:8]}...  RSSI={rssi:4d}dBm")
+        tracker.update(uuid, rssi, now)
 
     scanner = BleakScanner(detection_callback=on_detection)
 
     try:
         await scanner.start()
-        while True:
+        while not stop_event.is_set():
             await asyncio.sleep(1.0)
-            # タイムアウトチェック（1秒ごと）
             now = datetime.now()
+
+            # タイムアウトチェック（1秒ごと）：圏外になったらイベント記録
             for uuid, peak in tracker.flush_timeouts(now):
+                if peak < MIN_PEAK_RSSI:
+                    continue  # ピークが弱すぎる場合は記録しない
                 ts = now.strftime("%Y-%m-%d %H:%M:%S")
                 record_event(ts, SCANNER_ID, uuid, peak)
+                event_count += 1
+                print(f"  [通過イベント {event_count}/{MAX_EVENTS}]")
+                if event_count >= MAX_EVENTS:
+                    stop_event.set()
+                    break
+
+            # 時間上限チェック
+            elapsed = (now - start_time).total_seconds()
+            if elapsed >= MAX_DURATION:
+                print(f"\n{MAX_DURATION}秒経過のため停止します")
+                break
+
+        reason = f"{event_count}回のイベント検出" if event_count >= MAX_EVENTS else "時間上限"
+        print(f"\nスキャン停止（{reason}）")
 
     except KeyboardInterrupt:
-        print("\nスキャン停止")
+        print("\nスキャン停止（手動）")
     finally:
         await scanner.stop()
 
