@@ -11,6 +11,13 @@
 - [運用開始手順書](docs/manual_operation.md) - セットアップから運用開始までの手順
 - [集計手順書](docs/manual_report.md) - データ回収からレポート生成までの手順
 
-## 開発メモ
+## フォルダ構成
 
-- `.gitignore` はファイルが増えてきたタイミングで追加する
+```
+FactoryFloorBeacon/
+├── step1/     # Pi5でのBLEスキャン動作確認（プロトタイプ）
+├── scanner/   # 本番スキャナーコード（Step2・Step3で共用）
+├── report/    # レポート生成コード（Step3後に使用）
+├── data/      # 回収したCSVデータの置き場（git管理対象外）
+└── docs/      # ドキュメント一式
+```

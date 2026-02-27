@@ -1,0 +1,16 @@
+# 回収データ（個人情報を含むため管理対象外）
+data/*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# レポート出力物
+report/output/
+
+# OS
+.DS_Store
+Thumbs.db
