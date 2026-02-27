@@ -29,6 +29,16 @@
 | 電池寿命 | 数ヶ月〜約2年（設定次第） |
 | 設定アプリ | SSS-825（Android専用） |
 
+## 開発・検証フロー
+
+| ステップ | 構成 | 目的 |
+|----------|------|------|
+| Step 1 | Raspberry Pi 5 × 1 + MM-BLEBC8N × 2 | BLEスキャン基本動作確認（開発機） |
+| Step 2 | Raspberry Pi Zero 2 WH × 2 + MM-BLEBC8N × 2 | 実機での出入り検知確認 |
+| Step 3 | Raspberry Pi Zero 2 WH × 6 + MM-BLEBC8N × 担当者分 | 実環境での本番運用 |
+
+> 現在の作業PCは Raspberry Pi 5。開発・初期テストはこの機器上で行う。
+
 ## 設計方針
 
 - Raspberry Pi での BLE スキャンには `bleak`（Python）を使用予定
