@@ -27,7 +27,7 @@
 ## 制約・前提条件
 
 - ビーコン端末: SANWA SUPPLY MM-BLEBC8N（iBeacon / BLE 4.2）
-- スキャナー: Raspberry Pi
+- スキャナー: Raspberry Pi Zero 2 W H（小型・安価・BLE 4.2内蔵）
 - 個人識別: iBeacon の UUID で担当者を識別
 - 設定アプリ: SSS-825（Android専用）でビーコンを事前設定
 - 対象フロア: 工場2階・3階
