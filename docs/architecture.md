@@ -15,7 +15,7 @@
   └── 3ヶ月分のデータを蓄積
         │  ※運用終了後に手動回収（PC持参 or USBメモリ）
         ▼
-[集計・確認] Python + Plotly → report.html（ブラウザで閲覧）
+[集計・確認] Python + Plotly → report.html / report.csv / graphs/*.png
 ```
 
 ## ビーコン仕様（MM-BLEBC8N）
@@ -32,6 +32,7 @@
 ## 設計方針
 
 - Raspberry Pi での BLE スキャンには `bleak`（Python）を使用予定
+- データ保存: CSV形式（`events.csv`）、列構成: `timestamp, uuid, rssi`
 - レポート生成: Python + Plotly（インタラクティブHTMLグラフ）
 - UUID↔担当者名のマッピングは `person_map.csv` で管理
   - 例: `uuid, name`
@@ -55,6 +56,6 @@
 ## 未確定事項
 
 - [x] スキャナー機器: Raspberry Pi Zero 2 W H（BLE 4.2内蔵、小型・安価）、計6台（2階: 3台、3階: 3台）
-- [x] 電源確保: 各出入口でコンセット取得の見込み
+- [x] 電源確保: 各出入口でコンセント取得の見込み
 - [x] 入退出判定: RSSIピーク検出方式を採用
-- [ ] データ保存フォーマット（SQLite / CSV 等）
+- [x] データ保存フォーマット: CSV（人間が直接読める、トラブル時の確認が容易）
