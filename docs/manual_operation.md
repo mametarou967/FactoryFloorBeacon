@@ -59,8 +59,23 @@ yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy,鈴木花子
 
 各Raspberry Piにスキャナーソフトウェアをインストールします。
 
+### 3-1. ファイルの転送
+
+作業用PCからSCPで転送します（PCとPiが同じネットワークにある場合）。
+
 ```bash
-# （実装後に記載）
+# 作業用PC上で実行（<IP> は対象 Pi の IP アドレス）
+scp -r /path/to/FactoryFloorBeacon/scanner pi@<IP>:~/scanner
+```
+
+または USB メモリや SD カードで直接コピーしても構いません。
+
+### 3-2. 依存パッケージのインストール
+
+Pi 上で実行します。
+
+```bash
+pip3 install -r ~/scanner/requirements.txt
 ```
 
 ---
@@ -78,33 +93,51 @@ yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy,鈴木花子
 | 3階 出入口B | `3F-B` |
 | 3階 出入口C | `3F-C` |
 
-設定ファイル（`config.ini` 等）にスキャナーIDを記入します。
+Pi 上で `config.ini` を編集し、設置場所に合わせて `scanner_id` を変更します。
 
+```bash
+nano ~/scanner/config.ini
 ```
-# （実装後に記載）
+
+```ini
+[scanner]
+scanner_id = 2F-A   # 設置場所に応じて変更
 ```
 
 ---
 
-## ステップ 5: スキャナーの起動
+## ステップ 5: 自動起動の設定（systemd）
 
-各Raspberry Piでスキャンを開始します。
+Pi 起動時にスキャナーが自動で立ち上がるよう設定します。
 
 ```bash
-# （実装後に記載）
+# サービスファイルをコピー
+sudo cp ~/scanner/factoryfloorbeacon.service /etc/systemd/system/
+
+# サービスを有効化・起動
+sudo systemctl daemon-reload
+sudo systemctl enable factoryfloorbeacon
+sudo systemctl start factoryfloorbeacon
+
+# 状態確認（Active: active (running) と表示されれば OK）
+sudo systemctl status factoryfloorbeacon
 ```
 
-起動後、自動的にBLEスキャンが開始され、通過イベントが `events.csv` に記録されます。
+起動後、自動的にBLEスキャンが開始され、通過イベントが `~/scanner/events.csv` に記録されます。
 
 ---
 
 ## ステップ 6: 動作確認
 
 1. テスト用ビーコンを持って各出入口を通過する
-2. `events.csv` に記録が追記されていることを確認する
+2. `~/scanner/events.csv` に記録が追記されていることを確認する
 
 ```bash
-# （実装後に記載）
+# リアルタイムのスキャンログを確認
+journalctl -u factoryfloorbeacon -f
+
+# events.csv の最新行を確認
+tail ~/scanner/events.csv
 ```
 
 ---

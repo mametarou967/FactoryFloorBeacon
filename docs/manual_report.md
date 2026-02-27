@@ -22,8 +22,7 @@
 ### 方法A: PCを持参してSSH接続で取得する
 
 ```bash
-# （実装後に記載）
-# 例: scp pi@<IPアドレス>:~/events.csv ./data/2F-A_events.csv
+scp pi@<IPアドレス>:~/scanner/events.csv ./data/2F-A_events.csv
 ```
 
 ### 方法B: USBメモリにコピーして持ち帰る
