@@ -42,7 +42,7 @@
 ## 設計方針
 
 - Raspberry Pi での BLE スキャンには `bleak`（Python）を使用予定
-- データ保存: CSV形式（`events.csv`）、列構成: `timestamp, uuid, rssi`
+- データ保存: CSV形式（`events.csv`）、列構成: `timestamp, scanner_id, uuid, rssi`
 - レポート生成: Python + Plotly（インタラクティブHTMLグラフ）
 - UUID↔担当者名のマッピングは `person_map.csv` で管理
   - 例: `uuid, name`

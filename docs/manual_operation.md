@@ -45,7 +45,7 @@ yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy,鈴木花子
 ```
 
 2. ファイル名を `person_map.csv` として保存する
-3. 全6台のRaspberry Piに配置する（後述）
+3. 全6台のRaspberry Piに配置する（ステップ3のセットアップ時にコピーする）
 
 ---
 

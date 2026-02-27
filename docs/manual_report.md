@@ -58,6 +58,7 @@ data/
 以下のコマンドを1回実行するだけで全出力が生成されます。
 
 ```bash
+cd report
 python report.py
 ```
 

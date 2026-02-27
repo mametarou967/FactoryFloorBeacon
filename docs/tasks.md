@@ -24,7 +24,7 @@
 - [ ] BLE スキャンスクリプト作成
 - [ ] iBeacon パケットのパース処理（UUID・RSSI抽出）
 - [ ] RSSIピーク検出ロジックの実装（上昇→ピーク→下降で通過判定）
-- [ ] 通過イベントのローカル保存処理（CSV形式: timestamp, uuid, rssi）
+- [ ] 通過イベントのローカル保存処理（CSV形式: timestamp, scanner_id, uuid, rssi）
 - [ ] Pi 5 + ビーコン2個で動作確認
 
 ## フェーズ 2: 実機確認（Raspberry Pi Zero 2 WH）
