@@ -1,0 +1,17 @@
+[Unit]
+Description=FactoryFloorBeacon Scanner
+After=bluetooth.target
+Wants=bluetooth.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/scanner
+ExecStart=/usr/bin/python3 /home/pi/scanner/scanner.py
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
